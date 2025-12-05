@@ -2,13 +2,16 @@ using UnityEngine;
 
 public class BalanceMinigame : MinigameBase
 {
+    [Header("Refs")]
     [SerializeField] Transform balanceObject;
 
+    [Header("Tilt")]
     [SerializeField] float maxAngle = 30f;
     [SerializeField] float minDuration = 5f;
     [SerializeField] float maxDuration = 12f;
     [SerializeField] float easyPhaseDuration = 2f;
 
+    [Header("Control")]
     [SerializeField] float baseDriftSpeed = 10f;
     [SerializeField] float maxDriftSpeed = 60f;
     [SerializeField] float playerCounterSpeed = 80f;
@@ -24,13 +27,10 @@ public class BalanceMinigame : MinigameBase
     bool gameStarted;
     bool finished;
 
-    private void Awake()
+    public override void Init(float difficulty)
     {
-        StartGame();
-    }
+        base.Init(difficulty);
 
-    public override void StartGame()
-    {
         finished = false;
         gameStarted = true;
 
@@ -55,7 +55,9 @@ public class BalanceMinigame : MinigameBase
 
     void Update()
     {
-        if (!gameStarted || finished) return;
+        base.Update();
+
+        if (!running) return;
 
         float dt = Time.deltaTime;
 
@@ -64,7 +66,7 @@ public class BalanceMinigame : MinigameBase
         {
             finished = true;
             gameStarted = false;
-            FinishGame();
+            Win();
             return;
         }
 
@@ -107,7 +109,7 @@ public class BalanceMinigame : MinigameBase
             finished = true;
             gameStarted = false;
             Debug.Log("Balance failed!");
-            FinishGame();
+            Fail();
         }
     }
 }

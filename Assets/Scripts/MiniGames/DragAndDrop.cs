@@ -3,11 +3,13 @@ using UnityEngine;
 
 public class DragAndDrop : MinigameBase
 {
+    [Header("Refs")]
     [SerializeField] Transform itemsParent;
     [SerializeField] Transform goal;
     [SerializeField] float snapDistance = 2f;
     [SerializeField] int itemsToSpawn = 3;
 
+    [Header("IDK Lists?")]
     [SerializeField] List<GameObject> itemPrefabs;
     [SerializeField] List<Transform> spawnPoints;
 
@@ -15,22 +17,13 @@ public class DragAndDrop : MinigameBase
 
     int itemsRemaining;
     bool gameStarted;
+    public override void Init(float difficulty)
+    {
+        base.Init(difficulty);
 
-    private void Awake()
-    {
-        StartGame();
-    }
-    public override void StartGame()
-    {
         gameStarted = true;
-        Debug.Log("Start");
-
-        foreach (var obj in spawnedItems)
-        {
-            if (obj != null)
-                Destroy(obj);
-        }
         spawnedItems.Clear();
+
         SpawnItems();
     }
 
@@ -68,7 +61,9 @@ public class DragAndDrop : MinigameBase
 
     void Update()
     {
-        if (!gameStarted) return;
+        base.Update();
+
+        if (!running) return;
 
         for (int i = spawnedItems.Count - 1; i >= 0; i--)
         {
@@ -95,7 +90,7 @@ public class DragAndDrop : MinigameBase
                 if (itemsRemaining <= 0)
                 {
                     gameStarted = false;
-                    FinishGame();
+                    Win();
                     break;
                 }
             }

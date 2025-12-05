@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 public class MosquitoRhythmMinigame : MinigameBase
@@ -6,32 +7,39 @@ public class MosquitoRhythmMinigame : MinigameBase
     [Header("Refs")]
     [SerializeField] Camera cam;
     [SerializeField] GameObject mosquitoPrefab;
+    [SerializeField] Transform mosquitoContainer;
 
-    [Header("Random Pattern Settings")]
-    [SerializeField] int minSteps = 2;                  // min number of steps
-    [SerializeField] int maxSteps = 4;                  // max number of steps
-    [SerializeField] Vector2Int stepLengthRange = new Vector2Int(2, 5); // min/max notes per step
+    [Header("Pattern Settings")]
+    [SerializeField] int minSteps = 2;
+    [SerializeField] int maxSteps = 4;
+    [SerializeField] Vector2Int stepLengthRange = new Vector2Int(2, 5);
 
     [Header("Timing")]
-    [SerializeField] float leadIn = 0.5f;       // wait before first step starts
-    [SerializeField] float beatInterval = 0.4f; // time between notes in a step
-    [SerializeField] float stepPause = 0.5f;    // pause between steps
-    [SerializeField] float noteLifetime = 1.1f; // fail if a note lives longer than this
+    [SerializeField] float leadIn = 0.5f;
+    [SerializeField] float beatInterval = 0.4f;
+    [SerializeField] float stepPause = 0.5f;
+    [SerializeField] float noteLifetime = 1.1f;
 
-    [Header("Spawn Areas (normalized screen space)")]
-    [Range(0f, 0.5f)] public float leftMinXNorm = 0.05f;
+    [Header("screen space")]
+    [Range(0f, 0.5f)] public float leftMinXNorm = 0.2f;
     [Range(0f, 0.5f)] public float leftMaxXNorm = 0.45f;
-    [Range(0.5f, 1f)] public float rightMinXNorm = 0.55f;
+    [Range(0.5f, 1f)] public float rightMinXNorm = 0.7f;
     [Range(0.5f, 1f)] public float rightMaxXNorm = 0.95f;
+    [Range(0f, 1f)] public float minYNorm = 0.3f;
+    [Range(0f, 1f)] public float maxYNorm = 0.9f;
+    [Range(0f, 0.4f)] public float laneInnerVerticalPadding = 0.15f;
 
-    [Range(0f, 1f)] public float minYNorm = 0.15f;
-    [Range(0f, 1f)] public float maxYNorm = 0.85f;
+    [Header("Spray Cans")]
+    public Transform leftCan;
+    public Transform rightCan;
+    public float idleY = -9f;
+    public float hoverY = -5f;
+    public float tweenTime = 0.25f;
+    Tween leftTween;
+    Tween rightTween;
 
-    [Header("Lane Layout")]
-    [SerializeField, Range(0f, 0.4f)] float laneInnerVerticalPadding = 0.15f; // inner vertical padding inside each band
-
-    // Runtime-generated patterns (e.g. "LLR", "RLLL", etc.)
-    [SerializeField] List<string> stepPatterns = new List<string>();
+    List<string> stepPatterns = new();
+    readonly List<Note> activeNotes = new();
 
     struct Note
     {
@@ -41,43 +49,42 @@ public class MosquitoRhythmMinigame : MinigameBase
         public bool hit;
     }
 
-    readonly List<Note> activeNotes = new List<Note>();
-
     int currentStepIndex;
     int spawnIndexInStep;
     float nextSpawnTime;
+
     bool waitingForStepClear;
     bool allStepsSpawned;
-    bool started;
-    bool finished;
-
-    void Awake()
+    public override void Init(float difficulty)
     {
-        // If MinigameManager also calls StartGame(), remove this to avoid double-start.
-        StartGame();
+        base.Init(difficulty);
+
+        beatInterval = Mathf.Max(0.15f, beatInterval - difficulty * 0.05f);
+        minSteps += Mathf.FloorToInt(difficulty * 0.5f);
+        maxSteps += Mathf.FloorToInt(difficulty * 0.5f);
+
+        StartRhythmGame();
     }
 
-    public override void StartGame()
+    void StartRhythmGame()
     {
         if (cam == null)
             cam = Camera.main;
 
-        // cleanup old
-        foreach (var n in activeNotes)
+        if (mosquitoContainer == null)
         {
-            if (n.mosquito != null)
-                Destroy(n.mosquito.gameObject);
+            var go = new GameObject("Mosquitoes");
+            go.transform.SetParent(transform, false);
+            mosquitoContainer = go.transform;
         }
-        activeNotes.Clear();
+
+        CleanupNotes();
 
         GenerateRandomPatterns();
-
-        if (stepPatterns == null || stepPatterns.Count == 0)
+        if (stepPatterns.Count == 0)
         {
-            Debug.LogError("MosquitoRhythmMinigame: no stepPatterns generated!");
-            finished = true;
-            started = false;
-            FinishGame();
+            Debug.LogError("MosquitoRhythm: No patterns generated.");
+            Fail();
             return;
         }
 
@@ -87,10 +94,16 @@ public class MosquitoRhythmMinigame : MinigameBase
         allStepsSpawned = false;
 
         nextSpawnTime = Time.time + leadIn;
-        started = true;
-        finished = false;
+    }
 
-        Debug.Log($"[MosquitoRhythm] StartGame: step 0 pattern = \"{stepPatterns[0]}\"");
+    void CleanupNotes()
+    {
+        foreach (var n in activeNotes)
+        {
+            if (n.mosquito != null)
+                Destroy(n.mosquito.gameObject);
+        }
+        activeNotes.Clear();
     }
 
     void GenerateRandomPatterns()
@@ -101,34 +114,29 @@ public class MosquitoRhythmMinigame : MinigameBase
         for (int s = 0; s < steps; s++)
         {
             int length = Random.Range(stepLengthRange.x, stepLengthRange.y + 1);
-            System.Text.StringBuilder sb = new System.Text.StringBuilder(length);
+            System.Text.StringBuilder sb = new(length);
             for (int i = 0; i < length; i++)
-            {
-                bool left = Random.value < 0.5f;
-                sb.Append(left ? 'L' : 'R');
-            }
+                sb.Append(Random.value < 0.5f ? 'L' : 'R');
 
-            string pattern = sb.ToString();
-            stepPatterns.Add(pattern);
-            Debug.Log($"[MosquitoRhythm] Generated step {s} pattern = \"{pattern}\"");
+            stepPatterns.Add(sb.ToString());
         }
     }
 
     void Update()
     {
-        if (!started || finished) return;
+        base.Update();
+
+        if (!running) return;
 
         HandleSpawning();
 
         if (Input.GetMouseButtonDown(0))
-        {
             HandleClick();
-        }
 
         CheckNotes();
         CheckStepProgress();
+        UpdateSprayCans();
     }
-
     void HandleSpawning()
     {
         if (allStepsSpawned) return;
@@ -136,95 +144,61 @@ public class MosquitoRhythmMinigame : MinigameBase
         if (Time.time < nextSpawnTime) return;
 
         string pattern = stepPatterns[currentStepIndex];
+
         if (spawnIndexInStep >= pattern.Length)
         {
             waitingForStepClear = true;
-            Debug.Log($"[MosquitoRhythm] Step {currentStepIndex} fully spawned, waiting for player.");
             return;
         }
 
-        char c = pattern[spawnIndexInStep];
-        bool isLeft = (c == 'L' || c == 'l');
-
+        bool isLeft = pattern[spawnIndexInStep] == 'L';
         SpawnNote(isLeft);
 
         spawnIndexInStep++;
-        if (spawnIndexInStep < pattern.Length)
-        {
-            nextSpawnTime = Time.time + beatInterval;
-        }
-        else
-        {
-            waitingForStepClear = true;
-            Debug.Log($"[MosquitoRhythm] Last note of step {currentStepIndex} spawned.");
-        }
+
+        nextSpawnTime =
+            spawnIndexInStep < pattern.Length ?
+            Time.time + beatInterval :
+            Time.time + stepPause;
     }
 
     void SpawnNote(bool isLeft)
     {
-        // Create mosquito at some temporary position (will be placed in UpdateLanePositions)
-        GameObject obj = Instantiate(mosquitoPrefab, Vector3.zero, Quaternion.identity);
+        GameObject obj = Instantiate(
+            mosquitoPrefab,
+            Vector3.zero,
+            Quaternion.identity,
+            mosquitoContainer
+        );
+
         MosquitoNote mosquito = obj.GetComponent<MosquitoNote>();
 
-        if (mosquito == null)
-            Debug.LogWarning("Mosquito prefab has no MosquitoNote component!");
-
-        Note note = new Note
+        activeNotes.Add(new Note
         {
             mosquito = mosquito,
             isLeft = isLeft,
             spawnTime = Time.time,
             hit = false
-        };
-        activeNotes.Add(note);
+        });
 
-        Debug.Log($"[MosquitoRhythm] Spawn note: step={currentStepIndex}, indexInStep={spawnIndexInStep}, side={(isLeft ? "LEFT" : "RIGHT")}");
-
-        // After adding, re-layout lanes
         UpdateLanePositions();
     }
 
     void HandleClick()
     {
-        if (activeNotes.Count == 0)
-        {
-            Debug.Log("[MosquitoRhythm] Click but no active notes.");
-            return;
-        }
+        if (activeNotes.Count == 0) return;
 
         float half = Screen.width * 0.5f;
         bool clickLeft = Input.mousePosition.x < half;
 
-        Debug.Log($"[MosquitoRhythm] Click X={Input.mousePosition.x}, half={half}, side={(clickLeft ? "LEFT" : "RIGHT")}");
+        int idx = activeNotes.FindIndex(n => !n.hit && n.isLeft == clickLeft);
+        if (idx == -1) return;
 
-        int idx = -1;
-        for (int i = 0; i < activeNotes.Count; i++)
-        {
-            if (!activeNotes[i].hit && activeNotes[i].isLeft == clickLeft)
-            {
-                idx = i;
-                break;
-            }
-        }
+        Note note = activeNotes[idx];
+        note.hit = true;
+        activeNotes[idx] = note;
 
-        if (idx == -1)
-        {
-            Debug.Log("[MosquitoRhythm] Clicked wrong side or no unhit note on that side.");
-            return;
-        }
-
-        Note n = activeNotes[idx];
-        n.hit = true;
-        activeNotes[idx] = n;
-
-        Debug.Log($"[MosquitoRhythm] HIT note index={idx}, side={(n.isLeft ? "LEFT" : "RIGHT")}");
-
-        if (n.mosquito != null)
-        {
-            n.mosquito.PlayHitAnimation();
-        }
-
-        // Re-layout remaining un-hit ones in their lanes
+        note.mosquito?.PlayHitAnimation();
         UpdateLanePositions();
     }
 
@@ -236,26 +210,19 @@ public class MosquitoRhythmMinigame : MinigameBase
 
             if (!n.hit && Time.time - n.spawnTime >= noteLifetime)
             {
-                Debug.Log($"[MosquitoRhythm] MISS note side={(n.isLeft ? "LEFT" : "RIGHT")} life={Time.time - n.spawnTime:F2}");
                 Fail();
                 return;
             }
 
             if (n.hit && (n.mosquito == null || n.mosquito.IsFinished))
-            {
                 activeNotes.RemoveAt(i);
-            }
         }
     }
 
     void CheckStepProgress()
     {
-        if (finished) return;
         if (!waitingForStepClear) return;
-
         if (activeNotes.Count > 0) return;
-
-        Debug.Log($"[MosquitoRhythm] Step {currentStepIndex} CLEARED.");
 
         if (currentStepIndex + 1 < stepPatterns.Count)
         {
@@ -263,33 +230,21 @@ public class MosquitoRhythmMinigame : MinigameBase
             spawnIndexInStep = 0;
             waitingForStepClear = false;
             nextSpawnTime = Time.time + stepPause;
-
-            Debug.Log($"[MosquitoRhythm] Moving to step {currentStepIndex}, pattern=\"{stepPatterns[currentStepIndex]}\"");
         }
         else
         {
             allStepsSpawned = true;
-            finished = true;
-            started = false;
-            Debug.Log("[MosquitoRhythm] All steps cleared. Minigame complete!");
-            FinishGame();
+            Win();
         }
     }
-
     void UpdateLanePositions()
     {
-        if (cam == null) return;
+        List<Transform> leftLane = new();
+        List<Transform> rightLane = new();
 
-        // Build un-hit lists per side in spawn order
-        List<Transform> leftLane = new List<Transform>();
-        List<Transform> rightLane = new List<Transform>();
-
-        for (int i = 0; i < activeNotes.Count; i++)
+        foreach (var n in activeNotes)
         {
-            Note n = activeNotes[i];
-            if (n.mosquito == null) continue;
-            if (n.hit) continue;
-
+            if (n.hit || n.mosquito == null) continue;
             if (n.isLeft) leftLane.Add(n.mosquito.transform);
             else rightLane.Add(n.mosquito.transform);
         }
@@ -300,57 +255,58 @@ public class MosquitoRhythmMinigame : MinigameBase
 
     void PositionLane(List<Transform> lane, bool isLeft)
     {
-        if (lane == null || lane.Count == 0) return;
+        if (lane.Count == 0) return;
 
-        float screenWidth = Screen.width;
-        float screenHeight = Screen.height;
+        float w = Screen.width;
+        float h = Screen.height;
 
-        // Horizontal range for this side (normalized -> pixel)
-        float minXNorm = isLeft ? leftMinXNorm : rightMinXNorm;
-        float maxXNorm = isLeft ? leftMaxXNorm : rightMaxXNorm;
-        float minX = minXNorm * screenWidth;
-        float maxX = maxXNorm * screenWidth;
+        float minX = (isLeft ? leftMinXNorm : rightMinXNorm) * w;
+        float maxX = (isLeft ? leftMaxXNorm : rightMaxXNorm) * w;
+        float minY = minYNorm * h;
+        float maxY = maxYNorm * h;
+        float total = maxY - minY;
 
-        // Vertical global range
-        float minY = minYNorm * screenHeight;
-        float maxY = maxYNorm * screenHeight;
-        float totalHeight = maxY - minY;
+        float segment = total / lane.Count;
 
-        int count = lane.Count;
-        float segmentHeight = totalHeight / count;
-
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < lane.Count; i++)
         {
-            Transform t = lane[i];
-            if (t == null) continue;
+            float segMinY = minY + segment * i;
+            float segMaxY = segMinY + segment;
 
-            // This mosquito's band (segment)
-            float segMinY = minY + segmentHeight * i;
-            float segMaxY = segMinY + segmentHeight;
-
-            float innerPad = segmentHeight * laneInnerVerticalPadding;
-            float yMinInner = Mathf.Lerp(segMinY, segMaxY, laneInnerVerticalPadding);
-            float yMaxInner = Mathf.Lerp(segMinY, segMaxY, 1f - laneInnerVerticalPadding);
+            float yMin = Mathf.Lerp(segMinY, segMaxY, laneInnerVerticalPadding);
+            float yMax = Mathf.Lerp(segMinY, segMaxY, 1f - laneInnerVerticalPadding);
 
             float sx = Random.Range(minX, maxX);
-            float sy = Random.Range(yMinInner, yMaxInner);
+            float sy = Random.Range(yMin, yMax);
 
-            // Keep same Z distance from camera
-            Vector3 currentWorld = t.position;
-            float screenZ = cam.WorldToScreenPoint(currentWorld).z;
+            Transform Mosquito = lane[i];
+            float z = cam.WorldToScreenPoint(Mosquito.position).z;
+            Vector3 world = cam.ScreenToWorldPoint(new Vector3(sx, sy, z));
 
-            Vector3 screenPos = new Vector3(sx, sy, screenZ);
-            Vector3 worldPos = cam.ScreenToWorldPoint(screenPos);
+            Mosquito.position = world;
 
-            t.position = worldPos;
+            Mosquito.GetComponent<MosquitoNote>()?.RefreshBasePosition();
         }
     }
 
-    void Fail()
+    void UpdateSprayCans()
     {
-        finished = true;
-        started = false;
-        Debug.Log("[MosquitoRhythm] FAILED (missed note)!");
-        FinishGame();
+        float half = Screen.width * 0.5f;
+        bool hoverLeft = Input.mousePosition.x < half;
+
+        float leftTarget = hoverLeft ? hoverY : idleY;
+        float rightTarget = hoverLeft ? idleY : hoverY;
+
+        if (leftCan)
+        {
+            leftTween?.Kill();
+            leftTween = leftCan.DOMoveY(leftTarget, tweenTime).SetEase(Ease.OutBack);
+        }
+
+        if (rightCan)
+        {
+            rightTween?.Kill();
+            rightTween = rightCan.DOMoveY(rightTarget, tweenTime).SetEase(Ease.OutBack);
+        }
     }
 }

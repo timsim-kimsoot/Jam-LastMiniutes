@@ -1,72 +1,167 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
+using TMPro;
 
 public class MinigameManager : MonoBehaviour
 {
-    [SerializeField] List<MinigameBase> minigamePrefabs;
-    [SerializeField] Transform minigameParent;
+    public static MinigameManager Instance { get; private set; }
 
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+    }
+
+    [Header("Refs")]
+    public MinigameBase[] minigamePrefabs;
+    public Transform miniGameContainer;
+
+    int currentPhase = 0;
+    float difficulty = 0f;
+    float difficultyIncrease = 0.25f;
+
+    MinigameBase activeGame;
+
+    [Header("Timer UI")]
+    [SerializeField] Image timerFillImage;
+    [SerializeField] Image emotionImage;
+    [SerializeField] Sprite emotionHappy;
+    [SerializeField] Sprite emotionWorried;
+    [SerializeField] Sprite emotionPanic;
+
+    float currentGameTimeLimit;
+
+    public MinigameBase ActiveGame => activeGame;
+
+    [Header("Transition UI")]
     [SerializeField] CanvasGroup transitionGroup;
-    [SerializeField] float fadeDuration = 0.5f;
-    [SerializeField] float betweenGamesDelay = 0.5f;
-    [SerializeField] Text titleText;
-
-    MinigameBase currentMinigame;
+    [SerializeField] TMP_Text transitionText;
+    [SerializeField] float fadeDuration = 0.3f;
+    [SerializeField] float readyHold = 0.5f;
+    [SerializeField] float goHold = 0.35f;
 
     void Start()
     {
-        StartCoroutine(MainLoop());
+        if (transitionGroup != null)
+        {
+            transitionGroup.alpha = 1f;
+        }
+
+        StartCoroutine(GameLoop());
     }
 
-    IEnumerator MainLoop()
+    IEnumerator GameLoop()
     {
-        yield return FadeFromBlack();
-
         while (true)
         {
-            var prefab = minigamePrefabs[Random.Range(0, minigamePrefabs.Count)];
+            yield return PlayPhase();
+            currentPhase++;
 
-            if (titleText != null)
-                titleText.text = prefab.name;
-
-            yield return FadeToBlack();
-
-            if (currentMinigame != null)
-                Destroy(currentMinigame.gameObject);
-
-            currentMinigame = Instantiate(prefab, minigameParent);
-
-            bool done = false;
-            currentMinigame.OnFinished += () => done = true;
-            currentMinigame.StartGame();
-
-            yield return FadeFromBlack();
-
-            while (!done)
-                yield return null;
-
-            yield return new WaitForSeconds(betweenGamesDelay);
+            if (currentPhase >= 4)
+                currentPhase = 0;
         }
     }
 
-    IEnumerator FadeToBlack()
+    IEnumerator PlayPhase()
     {
-        float t = 0;
-        while (t < fadeDuration)
+        MinigameBase selected = PickMinigameForPhase(currentPhase);
+
+        activeGame = Instantiate(selected, miniGameContainer);
+        activeGame.OnWin += HandleWin;
+        activeGame.OnFail += HandleFail;
+
+        activeGame.enabled = false;
+
+        activeGame.Init(difficulty);
+        currentGameTimeLimit = activeGame.GetTimeLimit();
+
+        UpdateTimerUI();
+
+        yield return ShowReadyIntro();
+
+        activeGame.enabled = true;
+
+        while (activeGame != null)
         {
-            t += Time.deltaTime;
-            float a = Mathf.Lerp(0f, 1f, t / fadeDuration);
-            transitionGroup.alpha = a;
+            UpdateTimerUI();
             yield return null;
         }
-        transitionGroup.alpha = 1f;
+
+        yield return FadeToBlack();
     }
 
-    IEnumerator FadeFromBlack()
+    MinigameBase PickMinigameForPhase(int phase)
     {
-        float t = 0;
+        return minigamePrefabs[phase];
+    }
+
+    void HandleWin()
+    {
+        Debug.Log("EPIC VICTORY!");
+        difficulty += difficultyIncrease;
+        Cleanup();
+    }
+
+    void HandleFail()
+    {
+        Debug.Log("STUPID FAIL!");
+        Cleanup();
+    }
+
+    void Cleanup()
+    {
+        if (activeGame != null)
+        {
+            Destroy(activeGame.gameObject);
+            activeGame = null;
+        }
+
+        if (timerFillImage != null)
+            timerFillImage.fillAmount = 0f;
+    }
+
+    void UpdateTimerUI()
+    {
+        if (activeGame == null) return;
+
+        float remaining = activeGame.GetRemainingTime();
+        float t = Mathf.Clamp01(remaining / currentGameTimeLimit);
+
+        if (timerFillImage != null)
+            timerFillImage.fillAmount = t;
+
+        if (emotionImage != null)
+        {
+            if (t > 0.5f) emotionImage.sprite = emotionHappy;
+            else if (t > 0.25f) emotionImage.sprite = emotionWorried;
+            else emotionImage.sprite = emotionPanic;
+        }
+    }
+
+    IEnumerator ShowReadyIntro()
+    {
+        if (transitionGroup == null) yield break;
+
+        transitionGroup.gameObject.SetActive(true);
+        transitionGroup.alpha = 1f;
+
+        if (transitionText != null)
+            transitionText.text = "READY";
+
+        yield return new WaitForSeconds(readyHold);
+
+        if (transitionText != null)
+            transitionText.text = "GO!";
+
+        yield return new WaitForSeconds(goHold);
+
+        float t = 0f;
         while (t < fadeDuration)
         {
             t += Time.deltaTime;
@@ -74,6 +169,30 @@ public class MinigameManager : MonoBehaviour
             transitionGroup.alpha = a;
             yield return null;
         }
+
         transitionGroup.alpha = 0f;
+        if (transitionText != null)
+            transitionText.text = "";
+    }
+
+    IEnumerator FadeToBlack()
+    {
+        if (transitionGroup == null) yield break;
+
+        transitionGroup.gameObject.SetActive(true);
+        if (transitionText != null)
+            transitionText.text = "";
+
+        float t = 0f;
+        float startA = transitionGroup.alpha;
+        while (t < fadeDuration)
+        {
+            t += Time.deltaTime;
+            float a = Mathf.Lerp(startA, 1f, t / fadeDuration);
+            transitionGroup.alpha = a;
+            yield return null;
+        }
+
+        transitionGroup.alpha = 1f;
     }
 }
