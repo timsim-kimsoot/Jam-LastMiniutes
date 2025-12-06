@@ -3,18 +3,35 @@ using System;
 
 public abstract class MinigameBase : MonoBehaviour
 {
-    public float timeLimit = 10f;
+    public enum DayPhase
+    {
+        Morning,
+        Commute,
+        Work,
+        Evening
+    }
+
+    [Header("Meta")]
+    [SerializeField] DayPhase phase;
+    [SerializeField] bool countsForDayCycle = true;
+    [SerializeField] MinigameBase nextOnWin;
+
+    [Header("Timer")]
+    public float timeLimit = 5f;
+
     protected float timer;
+    protected bool running;
 
     public Action OnWin;
     public Action OnFail;
 
-    protected bool running;
+    public DayPhase Phase => phase;
+    public bool CountsForDayCycle => countsForDayCycle;
+    public MinigameBase NextOnWin => nextOnWin;
 
     public virtual void Init(float difficulty)
     {
         timeLimit = Mathf.Max(1f, timeLimit - difficulty * 0.2f);
-
         timer = timeLimit;
         running = true;
     }
@@ -44,6 +61,7 @@ public abstract class MinigameBase : MonoBehaviour
         running = false;
         OnFail?.Invoke();
     }
+
     public float GetRemainingTime()
     {
         return Mathf.Max(0f, timer);

@@ -1,32 +1,36 @@
 using UnityEngine;
 using System;
+using DG.Tweening;
 
 public class Bus_Char : MonoBehaviour
 {
-    public float fallSpeed = 5f;
-    private bool falling = false;
-    private float targetY;
-    private Action onLanded;
+    public float fallSpeed = 12f;
+
+    Tween fallTween;
+    Action onLanded;
 
     public void FallTo(float targetY, Action callback)
     {
-        this.targetY = targetY;
-        this.onLanded = callback;
-        falling = true;
+        onLanded = callback;
+
+        if (fallTween != null && fallTween.IsActive())
+            fallTween.Kill();
+
+        float distance = Mathf.Abs(transform.position.y - targetY);
+        float duration = Mathf.Max(0.05f, distance / fallSpeed);
+
+        fallTween = transform
+            .DOMoveY(targetY, duration)
+            .SetEase(Ease.InQuad)
+            .OnComplete(() =>
+            {
+                onLanded?.Invoke();
+            });
     }
 
-    void Update()
+    void OnDestroy()
     {
-        if (!falling) return;
-
-        transform.position = Vector3.MoveTowards(transform.position,
-            new Vector3(transform.position.x, targetY, transform.position.z),
-            fallSpeed * Time.deltaTime);
-
-        if (Mathf.Approximately(transform.position.y, targetY))
-        {
-            falling = false;
-            onLanded?.Invoke();
-        }
+        if (fallTween != null && fallTween.IsActive())
+            fallTween.Kill();
     }
 }

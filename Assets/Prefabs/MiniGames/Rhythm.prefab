@@ -249,11 +249,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   timeLimit: 10
+  phase: 3
+  countsForDayCycle: 1
+  nextOnWin: {fileID: 0}
   cam: {fileID: 0}
   mosquitoPrefab: {fileID: 4777269412765466105, guid: 0756947c52025a94eac5c2c27367cdf0, type: 3}
   mosquitoContainer: {fileID: 1996236704830134332}
-  minSteps: 2
-  maxSteps: 4
   stepLengthRange: {x: 2, y: 5}
   leadIn: 0.5
   beatInterval: 0.4

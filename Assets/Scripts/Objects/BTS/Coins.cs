@@ -7,19 +7,21 @@ public class Coins : MonoBehaviour
     public event Action OnCaught;
     public event Action OnMissed;
 
-    [SerializeField] float fountainForce = 4f;
+    [SerializeField] float fallForce = 4f;
     [SerializeField] float lifetime = 2f;
 
-    private bool isCaught = false;
+    [SerializeField] public int value;
+
+    bool isCaught;
 
     void Start()
     {
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        rb.velocity = Vector2.zero;
+        rb.angularVelocity = 0f;
 
-        Vector2 dir = new Vector2(UnityEngine.Random.Range(-0.7f, 0.7f), 1f).normalized;
-
-        rb.AddForce(dir * fountainForce, ForceMode2D.Impulse);
-
+        Vector2 dir = new Vector2(UnityEngine.Random.Range(-0.7f, 0.7f), -1f).normalized;
+        rb.AddForce(dir * fallForce, ForceMode2D.Impulse);
         rb.AddTorque(UnityEngine.Random.Range(-100f, 100f));
 
         Invoke(nameof(TriggerMissed), lifetime);
@@ -35,7 +37,9 @@ public class Coins : MonoBehaviour
 
     void CatchAnimation()
     {
-        GetComponent<Collider2D>().enabled = false;
+        var col = GetComponent<Collider2D>();
+        if (col != null) col.enabled = false;
+
         DOTween.Kill(transform);
         transform.DOScale(0f, 0.3f).OnComplete(() => Destroy(gameObject));
     }

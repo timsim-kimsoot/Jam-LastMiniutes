@@ -130,6 +130,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   timeLimit: 5
+  phase: 1
+  countsForDayCycle: 1
+  nextOnWin: {fileID: 0}
   balanceObject: {fileID: 4007794934010328702}
   maxAngle: 30
   minDuration: 5
