@@ -55,7 +55,8 @@ public class PrinterMinigame : MinigameBase
         if (paper != null)
             paper.position = paperStartPos;
 
-        printDuration = Mathf.Max(1f, timeLimit - 5f);
+        float ratio = timeLimit <= 10f ? 0.6f : 0.4f;
+        printDuration = Mathf.Max(1f, timeLimit * ratio);
 
         GenerateJamTimes(difficulty);
 

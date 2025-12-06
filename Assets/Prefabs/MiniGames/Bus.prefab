@@ -55,7 +55,7 @@ MonoBehaviour:
   phase: 1
   countsForDayCycle: 1
   nextOnWin: {fileID: 0}
-  timeLimit: 10
+  timeLimit: 18
   crowdPrefabs:
   - {fileID: 2404882500195457141, guid: e38ea4753098f3e4a8a9960b0d30d215, type: 3}
   - {fileID: 4194153603922619714, guid: de0c44af5fc0f134789fe37f6997e12c, type: 3}
@@ -75,6 +75,10 @@ MonoBehaviour:
   minGaps: 2
   maxGaps: 5
   safeUnitsAroundPlayer: 2
+  normalBallSprite: {fileID: 21300000, guid: facee2898c4f02f40b335e6d407654a8, type: 3}
+  failBallSprite: {fileID: 21300000, guid: 339b54f41be28b447abb047076d7a808, type: 3}
+  failBounceHeight: 0.3
+  failBounceDuration: 0.1
   debugOverlap: 1
 --- !u!1 &1389590566161527328
 GameObject:
@@ -505,7 +509,7 @@ Transform:
   m_GameObject: {fileID: 5696280674347112494}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -7, z: 0}
+  m_LocalPosition: {x: 0, y: -4, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

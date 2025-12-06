@@ -202,7 +202,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_Sprite: {fileID: 21300000, guid: 01f8097ed47241d4391e78d930ec9dd9, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -267,7 +267,7 @@ MonoBehaviour:
   phase: 2
   countsForDayCycle: 1
   nextOnWin: {fileID: 0}
-  timeLimit: 10
+  timeLimit: 15
   printerSprite: {fileID: 8637890177629082691}
   printerBodyCollider: {fileID: 891095977397144486}
   paper: {fileID: 2124151273984025832}
@@ -493,7 +493,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: -1
   m_Sprite: {fileID: 21300000, guid: 40e959457621c864ba6bdb91937e3256, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0

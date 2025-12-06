@@ -10,11 +10,11 @@ public class MosquitoRhythm : MinigameBase
     [SerializeField] Transform mosquitoContainer;
 
     [Header("Pattern Settings")]
-    [SerializeField] Vector2Int stepLengthRange = new Vector2Int(2, 4); // x = min notes, y = base max notes
+    [SerializeField] Vector2Int stepLengthRange = new Vector2Int(2, 4);
 
     [Header("Timing")]
     [SerializeField] float leadIn = 0.5f;
-    [SerializeField] float beatInterval = 0.4f;
+    [SerializeField] float beatInterval = 0.2f;
     [SerializeField] float stepPause = 0.5f;
     [SerializeField] float noteLifetime = 1.1f;
 
@@ -36,6 +36,9 @@ public class MosquitoRhythm : MinigameBase
     Tween leftTween;
     Tween rightTween;
 
+    [Header("Spray")]
+    [SerializeField] float sprayCooldown = 0.25f;
+
     List<string> stepPatterns = new();
     readonly List<Note> activeNotes = new();
 
@@ -54,11 +57,13 @@ public class MosquitoRhythm : MinigameBase
     bool waitingForStepClear;
     bool allStepsSpawned;
 
+    float nextSprayTime;
+
     public override void Init(float difficulty)
     {
         base.Init(difficulty);
 
-        beatInterval = Mathf.Max(0.15f, beatInterval - difficulty * 0.05f);
+        nextSprayTime = 0f;
 
         StartRhythmGame(difficulty);
     }
@@ -107,26 +112,38 @@ public class MosquitoRhythm : MinigameBase
     {
         stepPatterns.Clear();
 
-        float rawSteps = (5f / 3f) * timeLimit - (16f / 3f);
-        int steps = Mathf.RoundToInt(rawSteps);
+        float ratio = timeLimit <= 10f ? 0.6f : 0.4f;
+        float usableTime = timeLimit * ratio;
+
+        float sequenceDuration = 2f;
+        int steps = Mathf.Max(1, Mathf.FloorToInt(usableTime / sequenceDuration));
         steps = Mathf.Clamp(steps, 2, 8);
 
-        // ---- notes per step from difficulty ----
-        int minNotes = Mathf.Max(1, stepLengthRange.x);         // usually 2
-        int baseMaxNotes = Mathf.Max(minNotes, stepLengthRange.y); // e.g. 4
-
+        int minNotes = Mathf.Max(1, stepLengthRange.x);
+        int baseMaxNotes = Mathf.Max(minNotes, stepLengthRange.y);
         int diffBoost = Mathf.FloorToInt(difficulty * 1f);
         int maxNotes = Mathf.Clamp(baseMaxNotes + diffBoost, minNotes, 8);
 
         for (int s = 0; s < steps; s++)
         {
-            int length = Random.Range(minNotes, maxNotes + 1); // 2 .. maxNotes (<=8)
-            System.Text.StringBuilder sb = new(length);
+            int length = Random.Range(minNotes, maxNotes + 1);
+            var sb = new System.Text.StringBuilder(length);
 
+            bool lastLeft = Random.value < 0.5f;
             for (int i = 0; i < length; i++)
             {
-                bool left = Random.value < 0.5f;
-                sb.Append(left ? 'L' : 'R');
+                if (i == 0)
+                {
+                    lastLeft = Random.value < 0.5f;
+                }
+                else
+                {
+                    float sameChance = 0.3f;
+                    if (Random.value > sameChance)
+                        lastLeft = !lastLeft;
+                }
+
+                sb.Append(lastLeft ? 'L' : 'R');
             }
 
             stepPatterns.Add(sb.ToString());
@@ -195,9 +212,15 @@ public class MosquitoRhythm : MinigameBase
 
         UpdateLanePositions();
     }
+
     void HandleClick()
     {
         if (activeNotes.Count == 0) return;
+
+        if (Time.time < nextSprayTime)
+            return;
+
+        nextSprayTime = Time.time + sprayCooldown;
 
         float half = Screen.width * 0.5f;
         bool clickLeft = Input.mousePosition.x < half;
@@ -248,6 +271,7 @@ public class MosquitoRhythm : MinigameBase
             Win();
         }
     }
+
     void UpdateLanePositions()
     {
         List<Transform> leftLane = new();
@@ -296,8 +320,12 @@ public class MosquitoRhythm : MinigameBase
 
             yung.position = world;
 
-            yung.GetComponent<MosquitoNote>()?.RefreshBasePosition();
-            yung.GetComponent<MosquitoNote>()?.SetNotes(isLeft);
+            var mn = yung.GetComponent<MosquitoNote>();
+            if (mn != null)
+            {
+                mn.RefreshBasePosition();
+                mn.SetNotes(isLeft);
+            }
         }
     }
 

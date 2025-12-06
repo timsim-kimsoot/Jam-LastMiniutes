@@ -1,5 +1,7 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 public class FitInCrowd : MinigameBase
 {
@@ -27,6 +29,12 @@ public class FitInCrowd : MinigameBase
     [SerializeField] int minGaps = 2;
     [SerializeField] int maxGaps = 4;
     [SerializeField] int safeUnitsAroundPlayer = 1;
+
+    [Header("Ball Visual")]
+    [SerializeField] Sprite normalBallSprite;
+    [SerializeField] Sprite failBallSprite;
+    [SerializeField] float failBounceHeight = 0.3f;
+    [SerializeField] float failBounceDuration = 0.1f;
 
     [Header("Debug")]
     [SerializeField] bool debugOverlap = true;
@@ -185,8 +193,11 @@ public class FitInCrowd : MinigameBase
         obj.transform.localRotation = Quaternion.identity;
 
         ball = obj.GetComponent<Bus_Char>();
-    }
 
+        var sr = ball.GetComponent<SpriteRenderer>();
+        if (sr != null && normalBallSprite != null)
+            sr.sprite = normalBallSprite;
+    }
 
     void Update()
     {
@@ -218,7 +229,7 @@ public class FitInCrowd : MinigameBase
         isDropping = true;
         crowdFrozen = true;
 
-        float targetY = -2;
+        float targetY = -2f;
 
         if (debugOverlap)
             Debug.Log($"[FitInCrowd] StartDrop targetY={targetY}");
@@ -230,23 +241,42 @@ public class FitInCrowd : MinigameBase
     {
         if (!running) return;
 
-        if (debugOverlap)
-            Debug.Log($"[FitInCrowd] OnBallLanded at {ball.transform.position}");
-
         bool hitCrowd = CheckCrowdOverlap();
 
         if (hitCrowd)
-        {
-            if (debugOverlap)
-                Debug.Log("[FitInCrowd] Result: HIT crowd -> Retry");
-            Retry();
-        }
+            StartCoroutine(HandleFailAndRetry());
         else
+            StartCoroutine(HandleSuccess());
+    }
+
+    IEnumerator HandleSuccess()
+    {
+        yield return new WaitForSeconds(0.25f);
+        Win();
+    }
+
+    IEnumerator HandleFailAndRetry()
+    {
+        if (ball != null)
         {
-            if (debugOverlap)
-                Debug.Log("[FitInCrowd] Result: NO hit -> Win");
-            Win();
+            var sr = ball.GetComponent<SpriteRenderer>();
+            if (sr != null && failBallSprite != null)
+                sr.sprite = failBallSprite;
+
+            ball.transform.DOKill();
+
+            Vector3 basePos = ball.transform.localPosition;
+            ball.transform.DOLocalJump(basePos, failBounceHeight, 1, failBounceDuration)
+                .SetEase(Ease.OutQuad);
+
+            yield return new WaitForSeconds(failBounceDuration);
+
+            if (sr != null && normalBallSprite != null)
+                sr.sprite = normalBallSprite;
         }
+
+        running = true;
+        Retry();
     }
 
     bool CheckCrowdOverlap()

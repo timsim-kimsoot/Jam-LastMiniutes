@@ -27,6 +27,7 @@ public class MinigameManager : MonoBehaviour
     MinigameBase activeGame;
     int phaseIndex;
     bool lastResultWasWin;
+    Coroutine gameLoopRoutine;
 
     public MinigameBase ActiveGame => activeGame;
 
@@ -41,10 +42,23 @@ public class MinigameManager : MonoBehaviour
         Instance = this;
     }
 
-    void Start()
+    public void BeginGameLoop()
     {
-        StartCoroutine(GameLoop());
+        Debug.Log($"Begin check | routine={gameLoopRoutine} | hasMinigames={(minigames != null ? minigames.Length : -1)}");
+
+        if (gameLoopRoutine != null) return;
+        if (minigames == null || minigames.Length == 0)
+        {
+            Debug.LogWarning("MinigameManager: minigames array is empty or null!");
+            return;
+        }
+
+        Debug.Log("Play");
+
+        difficulty = 0;
+        gameLoopRoutine = StartCoroutine(GameLoop());
     }
+
 
     IEnumerator GameLoop()
     {
