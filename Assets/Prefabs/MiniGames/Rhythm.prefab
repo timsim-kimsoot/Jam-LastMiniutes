@@ -248,7 +248,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f5221f14a01ad64fad3df064db33c85, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  timeLimit: 5
+  timeLimit: 10
   cam: {fileID: 0}
   mosquitoPrefab: {fileID: 4777269412765466105, guid: 0756947c52025a94eac5c2c27367cdf0, type: 3}
   mosquitoContainer: {fileID: 1996236704830134332}
@@ -259,13 +259,13 @@ MonoBehaviour:
   beatInterval: 0.4
   stepPause: 0.5
   noteLifetime: 3
-  leftMinXNorm: 0.05
-  leftMaxXNorm: 0.45
-  rightMinXNorm: 0.55
-  rightMaxXNorm: 0.95
-  minYNorm: 0.15
-  maxYNorm: 0.85
-  laneInnerVerticalPadding: 0.15
+  leftMinXNorm: 0.2
+  leftMaxXNorm: 0.3
+  rightMinXNorm: 0.7
+  rightMaxXNorm: 0.8
+  minYNorm: 0.3
+  maxYNorm: 0.9
+  laneInnerVerticalPadding: 0.3
   leftCan: {fileID: 8734531660398696835}
   rightCan: {fileID: 8276672445869747809}
   idleY: -7

@@ -16,12 +16,10 @@ public class DragAndDrop : MinigameBase
     readonly List<GameObject> spawnedItems = new List<GameObject>();
 
     int itemsRemaining;
-    bool gameStarted;
     public override void Init(float difficulty)
     {
         base.Init(difficulty);
 
-        gameStarted = true;
         spawnedItems.Clear();
 
         SpawnItems();
@@ -89,7 +87,6 @@ public class DragAndDrop : MinigameBase
 
                 if (itemsRemaining <= 0)
                 {
-                    gameStarted = false;
                     Win();
                     break;
                 }

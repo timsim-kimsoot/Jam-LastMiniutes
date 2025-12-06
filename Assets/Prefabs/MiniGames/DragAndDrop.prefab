@@ -192,6 +192,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c32f1abb102f2654499d4456fdd90ab9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  timeLimit: 8
   itemsParent: {fileID: 5247136477863427798}
   goal: {fileID: 5247136477863427798}
   snapDistance: 0.5

@@ -10,9 +10,7 @@ public class MosquitoRhythmMinigame : MinigameBase
     [SerializeField] Transform mosquitoContainer;
 
     [Header("Pattern Settings")]
-    [SerializeField] int minSteps = 2;
-    [SerializeField] int maxSteps = 4;
-    [SerializeField] Vector2Int stepLengthRange = new Vector2Int(2, 5);
+    [SerializeField] Vector2Int stepLengthRange = new Vector2Int(2, 4); // x = min notes, y = base max notes
 
     [Header("Timing")]
     [SerializeField] float leadIn = 0.5f;
@@ -27,7 +25,7 @@ public class MosquitoRhythmMinigame : MinigameBase
     [Range(0.5f, 1f)] public float rightMaxXNorm = 0.95f;
     [Range(0f, 1f)] public float minYNorm = 0.3f;
     [Range(0f, 1f)] public float maxYNorm = 0.9f;
-    [Range(0f, 0.4f)] public float laneInnerVerticalPadding = 0.15f;
+    [Range(0f, 0.4f)] public float laneInnerVerticalPadding = 0.3f;
 
     [Header("Spray Cans")]
     public Transform leftCan;
@@ -37,6 +35,11 @@ public class MosquitoRhythmMinigame : MinigameBase
     public float tweenTime = 0.25f;
     Tween leftTween;
     Tween rightTween;
+
+    [Header("Audio")]
+    [SerializeField] AudioSource audioSource;
+    [SerializeField] List<AudioClip> leftSpawnClips = new();
+    [SerializeField] List<AudioClip> rightSpawnClips = new();
 
     List<string> stepPatterns = new();
     readonly List<Note> activeNotes = new();
@@ -55,18 +58,17 @@ public class MosquitoRhythmMinigame : MinigameBase
 
     bool waitingForStepClear;
     bool allStepsSpawned;
+
     public override void Init(float difficulty)
     {
         base.Init(difficulty);
 
         beatInterval = Mathf.Max(0.15f, beatInterval - difficulty * 0.05f);
-        minSteps += Mathf.FloorToInt(difficulty * 0.5f);
-        maxSteps += Mathf.FloorToInt(difficulty * 0.5f);
 
-        StartRhythmGame();
+        StartRhythmGame(difficulty);
     }
 
-    void StartRhythmGame()
+    void StartRhythmGame(float difficulty)
     {
         if (cam == null)
             cam = Camera.main;
@@ -80,7 +82,7 @@ public class MosquitoRhythmMinigame : MinigameBase
 
         CleanupNotes();
 
-        GenerateRandomPatterns();
+        GeneratePatternsFromTimeAndDifficulty(difficulty);
         if (stepPatterns.Count == 0)
         {
             Debug.LogError("MosquitoRhythm: No patterns generated.");
@@ -106,17 +108,35 @@ public class MosquitoRhythmMinigame : MinigameBase
         activeNotes.Clear();
     }
 
-    void GenerateRandomPatterns()
+    void GeneratePatternsFromTimeAndDifficulty(float difficulty)
     {
         stepPatterns.Clear();
 
-        int steps = Random.Range(minSteps, maxSteps + 1);
+        // ---- steps from timeLimit ----
+        // Make a curve so:
+        //  time = 5  -> ~3 steps
+        //  time = 8  -> ~8 steps
+        float rawSteps = (5f / 3f) * timeLimit - (16f / 3f);
+        int steps = Mathf.RoundToInt(rawSteps);
+        steps = Mathf.Clamp(steps, 2, 8); // at least 2 steps, at most 8
+
+        // ---- notes per step from difficulty ----
+        int minNotes = Mathf.Max(1, stepLengthRange.x);         // usually 2
+        int baseMaxNotes = Mathf.Max(minNotes, stepLengthRange.y); // e.g. 4
+
+        int diffBoost = Mathf.FloorToInt(difficulty * 1f);
+        int maxNotes = Mathf.Clamp(baseMaxNotes + diffBoost, minNotes, 8);
+
         for (int s = 0; s < steps; s++)
         {
-            int length = Random.Range(stepLengthRange.x, stepLengthRange.y + 1);
+            int length = Random.Range(minNotes, maxNotes + 1); // 2 .. maxNotes (<=8)
             System.Text.StringBuilder sb = new(length);
+
             for (int i = 0; i < length; i++)
-                sb.Append(Random.value < 0.5f ? 'L' : 'R');
+            {
+                bool left = Random.value < 0.5f;
+                sb.Append(left ? 'L' : 'R');
+            }
 
             stepPatterns.Add(sb.ToString());
         }
@@ -137,6 +157,7 @@ public class MosquitoRhythmMinigame : MinigameBase
         CheckStepProgress();
         UpdateSprayCans();
     }
+
     void HandleSpawning()
     {
         if (allStepsSpawned) return;
@@ -156,10 +177,10 @@ public class MosquitoRhythmMinigame : MinigameBase
 
         spawnIndexInStep++;
 
-        nextSpawnTime =
-            spawnIndexInStep < pattern.Length ?
-            Time.time + beatInterval :
-            Time.time + stepPause;
+        if (spawnIndexInStep < pattern.Length)
+            nextSpawnTime = Time.time + beatInterval;
+        else
+            nextSpawnTime = Time.time + stepPause;
     }
 
     void SpawnNote(bool isLeft)
@@ -181,7 +202,20 @@ public class MosquitoRhythmMinigame : MinigameBase
             hit = false
         });
 
+        PlaySpawnSound(isLeft);
         UpdateLanePositions();
+    }
+
+    void PlaySpawnSound(bool isLeft)
+    {
+        if (audioSource == null) return;
+
+        List<AudioClip> list = isLeft ? leftSpawnClips : rightSpawnClips;
+        if (list == null || list.Count == 0) return;
+
+        var clip = list[Random.Range(0, list.Count)];
+        if (clip != null)
+            audioSource.PlayOneShot(clip);
     }
 
     void HandleClick()
@@ -279,13 +313,13 @@ public class MosquitoRhythmMinigame : MinigameBase
             float sx = Random.Range(minX, maxX);
             float sy = Random.Range(yMin, yMax);
 
-            Transform Mosquito = lane[i];
-            float z = cam.WorldToScreenPoint(Mosquito.position).z;
+            Transform t = lane[i];
+            float z = cam.WorldToScreenPoint(t.position).z;
             Vector3 world = cam.ScreenToWorldPoint(new Vector3(sx, sy, z));
 
-            Mosquito.position = world;
+            t.position = world;
 
-            Mosquito.GetComponent<MosquitoNote>()?.RefreshBasePosition();
+            t.GetComponent<MosquitoNote>()?.RefreshBasePosition();
         }
     }
 
@@ -308,5 +342,14 @@ public class MosquitoRhythmMinigame : MinigameBase
             rightTween?.Kill();
             rightTween = rightCan.DOMoveY(rightTarget, tweenTime).SetEase(Ease.OutBack);
         }
+    }
+
+    void OnDestroy()
+    {
+        leftTween?.Kill();
+        rightTween?.Kill();
+
+        if (leftCan) leftCan.DOKill();
+        if (rightCan) rightCan.DOKill();
     }
 }

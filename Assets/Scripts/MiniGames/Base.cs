@@ -3,7 +3,7 @@ using System;
 
 public abstract class MinigameBase : MonoBehaviour
 {
-    public float timeLimit = 5f;
+    public float timeLimit = 10f;
     protected float timer;
 
     public Action OnWin;

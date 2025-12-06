@@ -28,13 +28,6 @@ public class MinigameManager : MonoBehaviour
 
     MinigameBase activeGame;
 
-    [Header("Timer UI")]
-    [SerializeField] Image timerFillImage;
-    [SerializeField] Image emotionImage;
-    [SerializeField] Sprite emotionHappy;
-    [SerializeField] Sprite emotionWorried;
-    [SerializeField] Sprite emotionPanic;
-
     float currentGameTimeLimit;
 
     public MinigameBase ActiveGame => activeGame;
@@ -81,15 +74,12 @@ public class MinigameManager : MonoBehaviour
         activeGame.Init(difficulty);
         currentGameTimeLimit = activeGame.GetTimeLimit();
 
-        UpdateTimerUI();
-
         yield return ShowReadyIntro();
 
         activeGame.enabled = true;
 
         while (activeGame != null)
         {
-            UpdateTimerUI();
             yield return null;
         }
 
@@ -120,27 +110,6 @@ public class MinigameManager : MonoBehaviour
         {
             Destroy(activeGame.gameObject);
             activeGame = null;
-        }
-
-        if (timerFillImage != null)
-            timerFillImage.fillAmount = 0f;
-    }
-
-    void UpdateTimerUI()
-    {
-        if (activeGame == null) return;
-
-        float remaining = activeGame.GetRemainingTime();
-        float t = Mathf.Clamp01(remaining / currentGameTimeLimit);
-
-        if (timerFillImage != null)
-            timerFillImage.fillAmount = t;
-
-        if (emotionImage != null)
-        {
-            if (t > 0.5f) emotionImage.sprite = emotionHappy;
-            else if (t > 0.25f) emotionImage.sprite = emotionWorried;
-            else emotionImage.sprite = emotionPanic;
         }
     }
 

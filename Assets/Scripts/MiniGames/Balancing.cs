@@ -24,21 +24,17 @@ public class BalanceMinigame : MinigameBase
     float currentDriftSpeed;
     float nextFlipTime;
 
-    bool gameStarted;
-    bool finished;
-
     public override void Init(float difficulty)
     {
-        base.Init(difficulty);
-
-        finished = false;
-        gameStarted = true;
-
         elapsed = 0f;
         tilt = 0f;
 
         duration = Random.Range(minDuration, maxDuration);
         driftSign = Random.value < 0.5f ? -1f : 1f;
+        duration = Mathf.Max(1f, duration - difficulty * 0.2f);
+        base.timeLimit = duration;
+        base.timer = base.timeLimit;
+        base.running = true;
 
         ScheduleNextDirectionFlip();
 
@@ -62,10 +58,8 @@ public class BalanceMinigame : MinigameBase
         float dt = Time.deltaTime;
 
         elapsed += dt;
-        if (elapsed >= duration)
+        if (elapsed >= (duration - 0.1f))
         {
-            finished = true;
-            gameStarted = false;
             Win();
             return;
         }
@@ -106,8 +100,6 @@ public class BalanceMinigame : MinigameBase
 
         if (Mathf.Abs(tilt) >= maxAngle)
         {
-            finished = true;
-            gameStarted = false;
             Debug.Log("Balance failed!");
             Fail();
         }

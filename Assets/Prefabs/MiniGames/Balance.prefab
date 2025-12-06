@@ -129,12 +129,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d7d20c25914cde4cb086dad58002757, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  timeLimit: 5
   balanceObject: {fileID: 4007794934010328702}
   maxAngle: 30
   minDuration: 5
-  maxDuration: 12
+  maxDuration: 10
   easyPhaseDuration: 2
-  baseDriftSpeed: 10
+  baseDriftSpeed: 30
   maxDriftSpeed: 60
   playerCounterSpeed: 80
   directionFlipInterval: {x: 0.4, y: 1.2}
