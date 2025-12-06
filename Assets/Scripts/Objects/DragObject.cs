@@ -46,8 +46,6 @@ public class DragObject : MonoBehaviour
 
     private void OnMouseDown()
     {
-        Debug.Log("down");
-
         Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         mouseWorld.z = transform.position.z;
 
@@ -58,7 +56,6 @@ public class DragObject : MonoBehaviour
 
     private void OnMouseUp()
     {
-        Debug.Log("up");
         dragging = false;
     }
 }

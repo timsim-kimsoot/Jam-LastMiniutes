@@ -86,7 +86,7 @@ public class MosquitoRhythm : MinigameBase
         if (stepPatterns.Count == 0)
         {
             Debug.LogError("MosquitoRhythm: No patterns generated.");
-            Fail();
+            Win();
             return;
         }
 
@@ -241,12 +241,6 @@ public class MosquitoRhythm : MinigameBase
         for (int i = activeNotes.Count - 1; i >= 0; i--)
         {
             Note n = activeNotes[i];
-
-            if (!n.hit && Time.time - n.spawnTime >= noteLifetime)
-            {
-                Fail();
-                return;
-            }
 
             if (n.hit && (n.mosquito == null || n.mosquito.IsFinished))
                 activeNotes.RemoveAt(i);

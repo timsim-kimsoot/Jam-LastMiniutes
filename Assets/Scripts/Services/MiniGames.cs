@@ -71,7 +71,8 @@ public class MinigameManager : MonoBehaviour
         {
             var phase = phaseOrder[phaseIndex];
             MinigameBase root = PickRandomRootForPhase(phase);
-
+            MusicManager.Instance?.UpdateMinigameMusic(difficulty);
+            Debug.Log(difficulty);
             if (root == null)
             {
                 yield return null;

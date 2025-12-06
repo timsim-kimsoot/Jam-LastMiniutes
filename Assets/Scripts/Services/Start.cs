@@ -31,6 +31,10 @@ public class StartMenuUI : MonoBehaviour
         startMenuRoot.SetActive(true);
         comicRoot.SetActive(false);
     }
+    void Start()
+    {
+        MusicManager.Instance?.PlayTitleMusic();
+    }
 
     void OnStartPressed()
     {
@@ -47,8 +51,11 @@ public class StartMenuUI : MonoBehaviour
 
     public void OpenStartMenu()
     {
-        startMenuRoot.SetActive(true);
-        comicRoot.SetActive(false);
+        comicRoot.SetActive(true);
+        startMenuRoot.SetActive(false);
+
+        MusicManager.Instance?.PlayComicMusic();
+
         hasStarted = false;
     }
 
