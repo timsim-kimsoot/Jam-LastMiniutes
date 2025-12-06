@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
-public class MosquitoRhythmMinigame : MinigameBase
+public class MosquitoRhythm : MinigameBase
 {
     [Header("Refs")]
     [SerializeField] Camera cam;
@@ -35,11 +35,6 @@ public class MosquitoRhythmMinigame : MinigameBase
     public float tweenTime = 0.25f;
     Tween leftTween;
     Tween rightTween;
-
-    [Header("Audio")]
-    [SerializeField] AudioSource audioSource;
-    [SerializeField] List<AudioClip> leftSpawnClips = new();
-    [SerializeField] List<AudioClip> rightSpawnClips = new();
 
     List<string> stepPatterns = new();
     readonly List<Note> activeNotes = new();
@@ -112,13 +107,9 @@ public class MosquitoRhythmMinigame : MinigameBase
     {
         stepPatterns.Clear();
 
-        // ---- steps from timeLimit ----
-        // Make a curve so:
-        //  time = 5  -> ~3 steps
-        //  time = 8  -> ~8 steps
         float rawSteps = (5f / 3f) * timeLimit - (16f / 3f);
         int steps = Mathf.RoundToInt(rawSteps);
-        steps = Mathf.Clamp(steps, 2, 8); // at least 2 steps, at most 8
+        steps = Mathf.Clamp(steps, 2, 8);
 
         // ---- notes per step from difficulty ----
         int minNotes = Mathf.Max(1, stepLengthRange.x);         // usually 2
@@ -202,22 +193,8 @@ public class MosquitoRhythmMinigame : MinigameBase
             hit = false
         });
 
-        PlaySpawnSound(isLeft);
         UpdateLanePositions();
     }
-
-    void PlaySpawnSound(bool isLeft)
-    {
-        if (audioSource == null) return;
-
-        List<AudioClip> list = isLeft ? leftSpawnClips : rightSpawnClips;
-        if (list == null || list.Count == 0) return;
-
-        var clip = list[Random.Range(0, list.Count)];
-        if (clip != null)
-            audioSource.PlayOneShot(clip);
-    }
-
     void HandleClick()
     {
         if (activeNotes.Count == 0) return;
@@ -313,13 +290,14 @@ public class MosquitoRhythmMinigame : MinigameBase
             float sx = Random.Range(minX, maxX);
             float sy = Random.Range(yMin, yMax);
 
-            Transform t = lane[i];
-            float z = cam.WorldToScreenPoint(t.position).z;
+            Transform yung = lane[i];
+            float z = cam.WorldToScreenPoint(yung.position).z;
             Vector3 world = cam.ScreenToWorldPoint(new Vector3(sx, sy, z));
 
-            t.position = world;
+            yung.position = world;
 
-            t.GetComponent<MosquitoNote>()?.RefreshBasePosition();
+            yung.GetComponent<MosquitoNote>()?.RefreshBasePosition();
+            yung.GetComponent<MosquitoNote>()?.SetNotes(isLeft);
         }
     }
 

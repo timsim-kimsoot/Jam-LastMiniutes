@@ -1,11 +1,14 @@
-using UnityEngine;
 using DG.Tweening;
+using System.Collections.Generic;
+using UnityEngine;
 
 public class MosquitoNote : MonoBehaviour
 {
+    [Header("Spawn")]
     [SerializeField] float spawnScaleMultiplier = 1.5f;
     [SerializeField] float spawnScaleDuration = 0.2f;
 
+    [Header("Motion")]
     [SerializeField] float bounceDuration = 0.25f;
     [SerializeField] float wobbleOffset = 0.1f;
     [SerializeField] float wobbleDuration = 0.18f;
@@ -16,6 +19,12 @@ public class MosquitoNote : MonoBehaviour
     Vector3 baseScale;
     Tween currentTween;
     public bool IsFinished { get; private set; }
+    private bool HighNote = false;
+
+    [Header("Audio")]
+    [SerializeField] AudioSource audioSource;
+    [SerializeField] List<AudioClip> leftSpawnClips = new();
+    [SerializeField] List<AudioClip> rightSpawnClips = new();
 
     void Awake()
     {
@@ -36,6 +45,23 @@ public class MosquitoNote : MonoBehaviour
             currentTween.Kill();
 
         PlayBounceAndWobble();
+    }
+    public void SetNotes(bool isLeft)
+    {
+        HighNote = isLeft;
+        PlaySpawnSound();
+    }
+
+    void PlaySpawnSound()
+    {
+        if (audioSource == null) return;
+
+        List<AudioClip> list = HighNote ? leftSpawnClips : rightSpawnClips;
+        if (list == null || list.Count == 0) return;
+
+        var clip = list[Random.Range(0, list.Count)];
+        if (clip != null)
+            audioSource.PlayOneShot(clip);
     }
 
     void PlayBounceAndWobble()
