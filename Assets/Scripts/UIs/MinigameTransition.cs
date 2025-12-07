@@ -33,7 +33,7 @@ public class MinigameTransitionUI : MonoBehaviour
         Instance = this;
     }
 
-    public IEnumerator PlayReadyIntro()
+    public IEnumerator PlayReadyIntro(string tipText)
     {
         if (transitionGroup == null || transitionHole == null)
             yield break;
@@ -47,7 +47,7 @@ public class MinigameTransitionUI : MonoBehaviour
         transitionHole.localScale = Vector3.one * zoomStartScale;
 
         if (transitionText != null)
-            transitionText.text = "READY";
+            transitionText.text = tipText;
 
         bool done = false;
 
@@ -83,6 +83,7 @@ public class MinigameTransitionUI : MonoBehaviour
         while (!done)
             yield return null;
     }
+
 
     public void ZoomOutToBlack()
     {

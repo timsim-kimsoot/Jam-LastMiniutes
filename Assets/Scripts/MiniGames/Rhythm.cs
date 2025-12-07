@@ -17,6 +17,7 @@ public class MosquitoRhythm : MinigameBase
     [SerializeField] float beatInterval = 0.2f;
     [SerializeField] float stepPause = 0.5f;
     [SerializeField] float noteLifetime = 1.1f;
+    [SerializeField] float MissPenaltySeconds = 0.5f;
 
     [Header("screen space")]
     [Range(0f, 0.5f)] public float leftMinXNorm = 0.2f;
@@ -226,7 +227,13 @@ public class MosquitoRhythm : MinigameBase
         bool clickLeft = Input.mousePosition.x < half;
 
         int idx = activeNotes.FindIndex(n => !n.hit && n.isLeft == clickLeft);
-        if (idx == -1) return;
+        if (idx == -1)
+        {
+            SFXService.Instance.Play("Wrong", null, 0.7f);
+            DamageIndicatorUI.Instance.Flash();
+            timer = Mathf.Max(0f, timer - MissPenaltySeconds);
+            return;
+        }
 
         Note note = activeNotes[idx];
         note.hit = true;

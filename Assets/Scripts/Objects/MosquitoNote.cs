@@ -26,6 +26,15 @@ public class MosquitoNote : MonoBehaviour
     [SerializeField] List<AudioClip> leftSpawnClips = new();
     [SerializeField] List<AudioClip> rightSpawnClips = new();
 
+    [Header("Animation")]
+    [SerializeField] SpriteRenderer spriteRenderer;
+    [SerializeField] Sprite idleSpriteA;
+    [SerializeField] Sprite idleSpriteB;
+    [SerializeField] float idleSwapInterval = 0.5f;
+
+    private Tween idleLoopTween;
+    private bool idleToggle = false;
+
     void Awake()
     {
         baseScale = transform.localScale;
@@ -35,6 +44,23 @@ public class MosquitoNote : MonoBehaviour
                  .SetEase(Ease.OutBack);
 
         PlayBounceAndWobble();
+        StartIdleLoop();
+    }
+
+    void StartIdleLoop()
+    {
+        if (spriteRenderer == null || idleSpriteA == null || idleSpriteB == null)
+            return;
+
+        idleLoopTween = DOVirtual.DelayedCall(idleSwapInterval, () =>
+        {
+            if (IsFinished) return;
+
+            idleToggle = !idleToggle;
+            spriteRenderer.sprite = idleToggle ? idleSpriteA : idleSpriteB;
+
+            StartIdleLoop();
+        });
     }
 
     public void RefreshBasePosition()

@@ -174,6 +174,7 @@ public class PrinterMinigame : MinigameBase
         }
         else
         {
+            DamageIndicatorUI.Instance.Flash();
             SFXService.Instance.Play("Wrong", null, 0.7f);
             timer = Mathf.Max(0f, timer - shockPenaltySeconds);
         }

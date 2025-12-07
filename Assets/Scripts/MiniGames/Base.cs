@@ -19,6 +19,9 @@ public abstract class MinigameBase : MonoBehaviour
     [Header("Timer")]
     public float timeLimit = 5f;
 
+    [TextArea]
+    public string readyTip = "READY";
+
     protected float timer;
     protected bool running;
 

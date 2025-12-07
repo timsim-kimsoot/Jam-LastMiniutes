@@ -190,6 +190,8 @@ public class OsuClickMinigame : MinigameBase
     void HandleMiss(OsuNote note)
     {
         despawnedPoints++;
+        SFXService.Instance.Play("Wrong", null, 0.7f);
+        DamageIndicatorUI.Instance.Flash();
         activeNotes.Remove(note);
         timer = Mathf.Max(0f, timer - MissPenaltySeconds);
     }

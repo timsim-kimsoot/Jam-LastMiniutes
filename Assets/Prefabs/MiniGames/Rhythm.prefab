@@ -251,6 +251,7 @@ MonoBehaviour:
   countsForDayCycle: 1
   nextOnWin: {fileID: 0}
   timeLimit: 10
+  readyTip: CLICK LEFT OR RIGHT TO SPRAY ON THEM!
   cam: {fileID: 0}
   mosquitoPrefab: {fileID: 4777269412765466105, guid: 0756947c52025a94eac5c2c27367cdf0, type: 3}
   mosquitoContainer: {fileID: 1996236704830134332}
@@ -259,6 +260,7 @@ MonoBehaviour:
   beatInterval: 0.4
   stepPause: 0.5
   noteLifetime: 3
+  MissPenaltySeconds: 0.5
   leftMinXNorm: 0.2
   leftMaxXNorm: 0.3
   rightMinXNorm: 0.7
@@ -271,6 +273,7 @@ MonoBehaviour:
   idleY: -7
   hoverY: -5
   tweenTime: 0.25
+  sprayCooldown: 0.25
 --- !u!1 &8753186910037957379
 GameObject:
   m_ObjectHideFlags: 0

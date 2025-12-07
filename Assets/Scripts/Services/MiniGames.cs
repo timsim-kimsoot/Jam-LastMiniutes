@@ -150,7 +150,7 @@ public class MinigameManager : MonoBehaviour
         activeGame.Init(difficulty);
 
         if (MinigameTransitionUI.Instance != null)
-            yield return MinigameTransitionUI.Instance.PlayReadyIntro();
+            yield return MinigameTransitionUI.Instance.PlayReadyIntro(activeGame.readyTip);
 
         activeGame.enabled = true;
 

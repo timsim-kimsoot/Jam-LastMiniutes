@@ -576,7 +576,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 2
   m_Sprite: {fileID: 21300000, guid: 0ea7df58cab1a414c824daf304ecde21, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -744,7 +744,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 2
+  m_SortingOrder: 1
   m_Sprite: {fileID: 21300000, guid: b7507cdc6b98abc43af16bae2580643d, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -815,6 +815,7 @@ MonoBehaviour:
   countsForDayCycle: 1
   nextOnWin: {fileID: 0}
   timeLimit: 6
+  readyTip: BALANCE USING YOU MOUSE CLICK!
   balanceObject: {fileID: 9054572331700689667}
   maxAngle: 30
   minDuration: 5

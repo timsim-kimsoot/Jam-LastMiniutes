@@ -198,6 +198,7 @@ MonoBehaviour:
   countsForDayCycle: 1
   nextOnWin: {fileID: 0}
   timeLimit: 15
+  readyTip: COLLECTS ALL THE COINS!
   itemsParent: {fileID: 3596946772349961590}
   goal: {fileID: 5247136477863427798}
   snapDistance: 2

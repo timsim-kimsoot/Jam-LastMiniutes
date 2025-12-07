@@ -20,6 +20,7 @@ public class FitInCrowd : MinigameBase
     [Header("Movement")]
     [SerializeField] float baseMoveSpeed = 1.5f;
     [SerializeField] float moveRange = 10f;
+    [SerializeField] float MissPenaltySeconds = 0.2f;
 
     [Header("Collision")]
     [SerializeField] LayerMask crowdLayer;
@@ -261,6 +262,8 @@ public class FitInCrowd : MinigameBase
         if (ball != null)
         {
             SFXService.Instance.Play("Tab_b", null, 0.3f);
+            DamageIndicatorUI.Instance.Flash();
+            timer = Mathf.Max(0f, timer - MissPenaltySeconds);
             var sr = ball.GetComponent<SpriteRenderer>();
             if (sr != null && failBallSprite != null)
                 sr.sprite = failBallSprite;

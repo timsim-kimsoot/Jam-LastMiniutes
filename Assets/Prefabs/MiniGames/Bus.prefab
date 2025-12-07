@@ -56,6 +56,7 @@ MonoBehaviour:
   countsForDayCycle: 1
   nextOnWin: {fileID: 0}
   timeLimit: 18
+  readyTip: AIM FOR THE GAP!
   crowdPrefabs:
   - {fileID: 2404882500195457141, guid: e38ea4753098f3e4a8a9960b0d30d215, type: 3}
   - {fileID: 4194153603922619714, guid: de0c44af5fc0f134789fe37f6997e12c, type: 3}
@@ -68,6 +69,7 @@ MonoBehaviour:
   maxGapWorld: 24
   baseMoveSpeed: 15
   moveRange: 35
+  MissPenaltySeconds: 0.25
   crowdLayer:
     serializedVersion: 2
     m_Bits: 64

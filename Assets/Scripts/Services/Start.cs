@@ -77,7 +77,7 @@ public class StartMenuUI : MonoBehaviour
         Debug.Log("Begain");
 
         if (MinigameTransitionUI.Instance != null)
-            yield return MinigameTransitionUI.Instance.PlayReadyIntro();
+            yield return MinigameTransitionUI.Instance.PlayReadyIntro("COLLECTS ALL THE COINS!");
 
         Debug.Log("End Transition");
 

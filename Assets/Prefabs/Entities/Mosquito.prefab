@@ -150,6 +150,10 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 153ac3045e6123f43bc635ca000e6d5c, type: 3}
   - {fileID: 8300000, guid: 2f9e07a13bf737648a427cf1e66461ea, type: 3}
   - {fileID: 8300000, guid: be93018071c4d114db7609f39c9303d9, type: 3}
+  spriteRenderer: {fileID: 8568827982221666871}
+  idleSpriteA: {fileID: 21300000, guid: 45b538352f3e2694c86e3ae67c9aedca, type: 3}
+  idleSpriteB: {fileID: 21300000, guid: 9939b12e8219bb948842a837dede1b99, type: 3}
+  idleSwapInterval: 0.25
 --- !u!82 &9159891209324009801
 AudioSource:
   m_ObjectHideFlags: 0
