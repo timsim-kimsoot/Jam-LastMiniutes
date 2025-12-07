@@ -142,6 +142,7 @@ public class PrinterMinigame : MinigameBase
         if (jamIndex < jamTimes.Count && printElapsed >= jamTimes[jamIndex])
         {
             isJammed = true;
+            SFXService.Instance.Play("Printer_Jam", null, 0.4f);
             jamIndex++;
 
             if (ColorUtility.TryParseHtmlString("#A4A4A4", out var jamColor))
@@ -155,6 +156,7 @@ public class PrinterMinigame : MinigameBase
             printingComplete = true;
             isJammed = false;
             SetPrinterColor(normalColor);
+            SFXService.Instance.Play("Printer_Done", null, 0.4f);
             Win();
         }
     }
@@ -168,9 +170,11 @@ public class PrinterMinigame : MinigameBase
         {
             isJammed = false;
             SetPrinterColor(normalColor);
+            SFXService.Instance.Play("Printer_Run", null, 0.3f);
         }
         else
         {
+            SFXService.Instance.Play("Wrong", null, 0.7f);
             timer = Mathf.Max(0f, timer - shockPenaltySeconds);
         }
     }

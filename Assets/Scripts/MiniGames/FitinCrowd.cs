@@ -251,6 +251,7 @@ public class FitInCrowd : MinigameBase
 
     IEnumerator HandleSuccess()
     {
+        SFXService.Instance.Play("Tab_a", null, 0.5f);
         yield return new WaitForSeconds(0.1f);
         Win();
     }
@@ -259,6 +260,7 @@ public class FitInCrowd : MinigameBase
     {
         if (ball != null)
         {
+            SFXService.Instance.Play("Tab_b", null, 0.3f);
             var sr = ball.GetComponent<SpriteRenderer>();
             if (sr != null && failBallSprite != null)
                 sr.sprite = failBallSprite;

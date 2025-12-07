@@ -162,6 +162,7 @@ public class OsuClickMinigame : MinigameBase
         hitPoints++;
         activeNotes.Remove(note);
         despawnedPoints++;
+        SFXService.Instance.Play("Note_Click");
 
         var hsr = Hands.GetComponent<SpriteRenderer>();
         if (Hands != null)

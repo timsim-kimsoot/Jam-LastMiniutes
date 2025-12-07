@@ -48,6 +48,7 @@ public class DragObject : MonoBehaviour
     {
         Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         mouseWorld.z = transform.position.z;
+        SFXService.Instance.Play("Coin");
 
         offset = transform.position - mouseWorld;
         dragging = true;

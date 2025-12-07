@@ -232,6 +232,7 @@ public class MosquitoRhythm : MinigameBase
         note.hit = true;
         activeNotes[idx] = note;
 
+        SFXService.Instance.Play("Spray", null, 0.2f);
         note.mosquito?.PlayHitAnimation();
         UpdateLanePositions();
     }
