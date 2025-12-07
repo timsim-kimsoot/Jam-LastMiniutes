@@ -346,7 +346,7 @@ MonoBehaviour:
   noteLifetime: 2
   leadIn: 0.3
   MissPenaltySeconds: 0.75
-  sequenceLengthRange: {x: 1, y: 6}
+  sequenceLengthRange: {x: 1, y: 4}
   pauseEasy: 0.75
   pauseHard: 0.3
   Hands: {fileID: 2492743740253128955}

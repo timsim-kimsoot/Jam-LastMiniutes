@@ -1,6 +1,8 @@
+using DG.Tweening;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 
 public class StartMenuUI : MonoBehaviour
 {
@@ -9,6 +11,9 @@ public class StartMenuUI : MonoBehaviour
     [Header("Roots")]
     [SerializeField] GameObject startMenuRoot;
     [SerializeField] GameObject comicRoot;
+
+    [Header("Comic Panels")]
+    [SerializeField] List<ComicPanel> comicPanels = new();
 
     [Header("Buttons")]
     [SerializeField] Button startButton;
@@ -41,7 +46,11 @@ public class StartMenuUI : MonoBehaviour
         if (hasStarted) return;
         hasStarted = true;
 
-        OpenComic();
+        startMenuRoot.SetActive(false);
+        comicRoot.SetActive(true);
+        PlayComicSequence();
+
+        MusicManager.Instance?.PlayComicMusic();
     }
 
     void OnSkipPressed()
@@ -63,6 +72,31 @@ public class StartMenuUI : MonoBehaviour
     {
         startMenuRoot.SetActive(false);
         comicRoot.SetActive(true);
+    }
+    public void PlayComicSequence()
+    {
+        foreach (var panel in comicPanels)
+        {
+            panel.panel.gameObject.SetActive(false);
+        }
+
+        StartCoroutine(PlayComicSequenceCoroutine());
+    }
+
+    IEnumerator PlayComicSequenceCoroutine()
+    {
+        foreach (var panel in comicPanels)
+        {
+            yield return new WaitForSeconds(panel.delay);
+
+            panel.panel.localScale = Vector3.zero;
+            panel.panel.gameObject.SetActive(true);
+
+            panel.panel.DOScale(Vector3.one, panel.duration)
+                       .SetEase(panel.ease);
+        }
+
+        skipButton.gameObject.SetActive(true);
     }
 
     public void CloseAllMenus()

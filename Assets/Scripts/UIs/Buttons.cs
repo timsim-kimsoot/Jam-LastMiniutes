@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using DG.Tweening;
+using UnityEngine.UI;
 
 public class UIButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
 {
@@ -8,13 +9,18 @@ public class UIButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     [SerializeField] float clickScale = 0.95f;
     [SerializeField] float tweenDuration = 0.12f;
 
+    [SerializeField] Sprite defaultImage;
+    [SerializeField] Sprite PressedImage;
+
     RectTransform rect;
+    Image ButtonImage;
     Tween currentTween;
     Vector3 baseScale;
 
     void Awake()
     {
         rect = transform as RectTransform;
+        ButtonImage = transform.GetComponent<Image>();
         baseScale = rect.localScale;
     }
 
@@ -36,11 +42,13 @@ public class UIButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 
     public void OnPointerDown(PointerEventData eventData)
     {
+        ButtonImage.sprite = PressedImage;
         PlayScaleTween(baseScale * clickScale);
     }
 
     public void OnPointerUp(PointerEventData eventData)
     {
+        ButtonImage.sprite = defaultImage;
         PlayScaleTween(baseScale * hoverScale);
     }
 
